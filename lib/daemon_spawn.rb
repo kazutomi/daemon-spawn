@@ -5,11 +5,18 @@ require 'fileutils'
 module DaemonSpawn
   VERSION = '0.3.0'
 
+  def self.info(s)
+    puts s
+  end
+
+  def self.warn(s)
+    STDERR.puts s
+  end
+
   def self.usage(msg=nil) #:nodoc:
-    print "#{msg}, " if msg
-    puts "usage: #{$0} <command> [options]"
-    puts "Where <command> is one of start, stop, restart or status"
-    puts "[options] are additional options passed to the underlying process"
+    info "#{msg ? "#{msg}, " : ''}usage: #{$0} <command> [options]"
+    info "Where <command> is one of start, stop, restart or status"
+    info "[options] are additional options passed to the underlying process"
   end
 
   def self.alive?(pid)
@@ -20,17 +27,17 @@ module DaemonSpawn
 
   def self.start(daemon, args) #:nodoc:
     if !File.writable?(File.dirname(daemon.log_file))
-      STDERR.puts "Unable to write log file to #{daemon.log_file}"
+      warn "Unable to write log file to #{daemon.log_file}"
       exit 1
     end
 
     if !File.writable?(File.dirname(daemon.pid_file))
-      STDERR.puts "Unable to write PID file to #{daemon.pid_file}"
+      warn "Unable to write PID file to #{daemon.pid_file}"
       exit 1
     end
 
     if daemon.alive? && daemon.singleton
-      STDERR.puts "An instance of #{daemon.app_name} is already " +
+      warn "An instance of #{daemon.app_name} is already " +
         "running (PID #{daemon.pid})"
       exit 0
     end
@@ -50,7 +57,7 @@ module DaemonSpawn
       trap("TERM") {daemon.stop; exit}
       daemon.start(args)
     end
-    puts "#{daemon.app_name} started."
+    info "#{daemon.app_name} started."
   end
 
   def self.stop(daemon) #:nodoc:
@@ -63,24 +70,24 @@ module DaemonSpawn
       end
       if ticks = daemon.timeout
         while ticks > 0 and alive?(pid) do
-          puts "Process is still alive. #{ticks} seconds until I kill -9 it..."
+          info "Process is still alive. #{ticks} seconds until I kill -9 it..."
           sleep 1
           ticks -= 1
         end
         if alive?(pid)
-          puts "Process didn't quit after timeout of #{daemon.timeout} seconds. Killing..."
+          info "Process didn't quit after timeout of #{daemon.timeout} seconds. Killing..."
           Process.kill 9, pid
         end
       end
     else
-      puts "PID file not found. Is the daemon started?"
+      info "PID file not found. Is the daemon started?"
     end
   rescue Errno::ESRCH
-    puts "PID file found, but process was not running. The daemon may have died."
+    info "PID file found, but process was not running. The daemon may have died."
   end
 
   def self.status(daemon) #:nodoc:
-    puts "#{daemon.app_name} is #{daemon.alive? ? "" : "NOT "}running (PID #{daemon.pid})"
+    info "#{daemon.app_name} is #{daemon.alive? ? "" : "NOT "}running (PID #{daemon.pid})"
   end
 
   class Base
