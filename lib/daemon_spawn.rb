@@ -143,9 +143,11 @@ module DaemonSpawn
 
     def self.find(options)
       pid_file = new(options).pid_file
-      basename = File.basename(pid_file).split('.').first
-      pid_files = Dir.glob(File.join(File.dirname(pid_file), "#{basename}.*pid*"))
-      pid_files.map { |f| new(options.merge(:pid_file => f)) }
+      basename = File.basename(pid_file)
+      indices = Dir.glob(File.join(File.dirname(pid_file), "#{basename}*")).map do |f|
+        (f.scan(/\d+\Z/)[0] || '0').to_i
+      end
+      indices.map { |index| new(options.merge(:pid_file => pid_file, :index => index)) }
     end
 
     # Invoke this method to process command-line args and dispatch
