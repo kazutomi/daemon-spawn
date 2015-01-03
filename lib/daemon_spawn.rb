@@ -26,9 +26,11 @@ module DaemonSpawn
   end
 
   def self.start(daemon, args) #:nodoc:
-    if !File.writable?(File.dirname(daemon.log_file))
-      warn "Unable to write log file to #{daemon.log_file}"
-      exit 1
+    if !daemon.log_file.respond_to?(:write) or !daemon.log_file.respond_to?(:close)
+      if !File.writable?(File.dirname(daemon.log_file))
+        warn "Unable to write log file to #{daemon.log_file}"
+        exit 1
+      end
     end
 
     if !File.writable?(File.dirname(daemon.pid_file))
@@ -47,9 +49,13 @@ module DaemonSpawn
       exit if fork
       open(daemon.pid_file, 'w') { |f| f << Process.pid }
       Dir.chdir daemon.working_dir
-      old_umask = File.umask 0000
-      log = File.new(daemon.log_file, "a")
-      File.umask old_umask
+      if daemon.log_file.respond_to?(:write) and daemon.log_file.respond_to?(:close)
+        log = daemon.log_file
+      else
+        old_umask = File.umask 0000
+        log = File.new(daemon.log_file, "a")
+        File.umask old_umask
+      end
       log.sync = daemon.sync_log
       STDIN.reopen "/dev/null"
       STDOUT.reopen log
@@ -104,7 +110,9 @@ module DaemonSpawn
       self.index = opts[:index] || 0
       if self.index > 0
         self.pid_file += ".#{self.index}"
-        self.log_file += ".#{self.index}"
+        if !self.log_file.respond_to?(:write) or !self.log_file.respond_to?(:close)
+          self.log_file += ".#{self.index}"
+        end
       end
       self.sync_log = opts[:sync_log]
       self.singleton = opts[:singleton] || false
