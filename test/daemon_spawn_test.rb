@@ -209,4 +209,19 @@ class DaemonSpawnTest < Test::Unit::TestCase
       assert_equal 0100666, File.stat(log_file).mode
     end
   end
+
+  def test_io_log_output
+    log_file = File.join(Dir.tmpdir, 'test_io_log.log')
+    Dir.chdir(SERVERS) do
+      begin
+        `./log_to_io_server.rb stop #{log_file}`
+        FileUtils.rm_f log_file
+        assert_match /LogToIOServer started/, `./log_to_io_server.rb start #{log_file}`
+        assert_match /LogToIOServer.*started/, open(log_file) { |f| f.read }
+      ensure
+        `./log_to_io_server.rb stop #{log_file}`
+        FileUtils.rm_f log_file
+      end
+    end
+  end
 end
