@@ -122,6 +122,14 @@ module DaemonSpawn
       self.class.to_s.split('::').last
     end
 
+    def self.info(s)
+      puts s
+    end
+
+    def self.warn(s)
+      $stderr.puts s
+    end
+
     # Provide your implementation. These are provided as a reminder
     # only and will raise an error if invoked. When started, this
     # method will be invoked with the remaining command-line arguments.
@@ -192,7 +200,7 @@ module DaemonSpawn
     def self.start(opts, args)
       living_daemons = find(opts).select { |d| d.alive? }
       if living_daemons.any?
-        puts "Daemons already started! PIDS: #{living_daemons.map {|d| d.pid}.join(', ')}"
+        info "Daemons already started! PIDS: #{living_daemons.map {|d| d.pid}.join(', ')}"
         exit 1
       else
         build(opts).map { |d| DaemonSpawn.start(d, args) }
@@ -202,7 +210,7 @@ module DaemonSpawn
     def self.stop(opts, args)
       daemons = find(opts)
       if daemons.empty?
-        puts "No PID files found. Is the daemon started?"
+        info "No PID files found. Is the daemon started?"
         exit 1
       else
         daemons.each { |d| DaemonSpawn.stop(d) }
@@ -212,7 +220,7 @@ module DaemonSpawn
     def self.status(opts, args)
       daemons = find(opts)
       if daemons.empty?
-        puts 'No PIDs found'
+        info 'No PIDs found'
       else
         daemons.each { |d| DaemonSpawn.status(d) }
       end
