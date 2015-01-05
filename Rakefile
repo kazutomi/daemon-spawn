@@ -16,7 +16,7 @@ begin
     gemspec.rubyforge_project = "daemon-spawn"
     gemspec.email = "alex.vollmer@gmail.com"
     gemspec.homepage = "http://github.com/alexvollmer/daemon-spawn"
-    gemspec.authors = ["Alex Vollmer", "Seamus Abshere", "Emmanual Gomez", "Seth Falcon", "Woody Peterson", "Tilo Prütz"]
+    gemspec.authors = ["Alex Vollmer", "Seamus Abshere", "Emmanual Gomez", "Seth Falcon", "Woody Peterson", "Tilo Prütz", "Kazuto Tominaga"]
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
