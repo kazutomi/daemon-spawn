@@ -170,6 +170,17 @@ class DaemonSpawnTest < Test::Unit::TestCase
     end
   end
 
+  def test_custom_signal_invokes_stop_handler
+    log_file = File.join(Dir.tmpdir, 'deaf_server.log')
+    Dir.chdir(SERVERS) do
+      FileUtils.rm_f log_file
+      `./deaf_server.rb start`
+      sleep 1
+      `./deaf_server.rb stop`
+      assert_match /DeafServer stopped/, IO.read(log_file)
+    end
+  end
+
   def test_kill_9_following_timeout
     Dir.chdir(SERVERS) do
       `./stubborn_server.rb start`
