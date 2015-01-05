@@ -60,7 +60,7 @@ module DaemonSpawn
       STDIN.reopen "/dev/null"
       STDOUT.reopen log
       STDERR.reopen STDOUT
-      trap("TERM") {daemon.stop; exit}
+      trap(daemon.signal) { daemon.stop; exit }
       daemon.start(args)
     end
     info "#{daemon.app_name} started."
