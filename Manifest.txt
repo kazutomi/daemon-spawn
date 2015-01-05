@@ -1,9 +1,14 @@
 History.txt
 Manifest.txt
-README.txt
+README.rdoc
 Rakefile
+VERSION
 lib/daemon_spawn.rb
 test/daemon_spawn_test.rb
 test/multi_daemon_spawn_test.rb
+test/test_helper.rb
+test/servers/deaf_server.rb
 test/servers/echo_server.rb
+test/servers/log_to_io_server.rb
 test/servers/simple_server.rb
+test/servers/taps_server.rb
