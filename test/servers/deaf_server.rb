@@ -10,13 +10,13 @@ class DeafServer < DaemonSpawn::Base
   def start(args)
     trap('TERM') { }
     trap('INT')  { }
-    trap('SIGWINCH') { exit 0 }
     loop do
       sleep 100
     end
   end
 
   def stop
+    puts "#{self.class.name} stopped"
   end
 end
 
@@ -25,4 +25,4 @@ DeafServer.spawn!(:working_dir => File.join(File.dirname(__FILE__), '..', '..'),
                   :pid_file => File.join(Dir.tmpdir, 'deaf_server.pid'),
                   :sync_log => true,
                   :singleton => true,
-                  :signal => 'SIGWINCH')
+                  :signal => 'WINCH')
