@@ -217,10 +217,51 @@ class DaemonSpawnTest < Test::Unit::TestCase
         `./log_to_io_server.rb stop #{log_file}`
         FileUtils.rm_f log_file
         assert_match /LogToIOServer started/, `./log_to_io_server.rb start #{log_file}`
-        assert_match /LogToIOServer.*started/, open(log_file) { |f| f.read }
+        assert_match /LogToIOServer.*started/, IO.read(log_file)
       ensure
         `./log_to_io_server.rb stop #{log_file}`
         FileUtils.rm_f log_file
+      end
+    end
+  end
+
+  def test_using_logger
+    discarded_output = '/tmp/logger_server_dev_null.out'  # specify /dev/null to really discard
+    logger_log = '/tmp/logger_server_logger.log'  # literally specified in logger_server.rb
+    Dir.chdir(SERVERS) do
+      begin
+        `./logger_server.rb stop #{discarded_output}`  # will write something in log files
+        FileUtils.rm_f discarded_output
+        FileUtils.rm_f logger_log
+        assert_equal '', `./logger_server.rb start #{discarded_output}`
+        assert_equal 0, File.size(discarded_output)
+        lines = IO.read(logger_log).lines
+        assert_equal 1, lines.count { |l| /\A# Logfile created/ =~ l }
+        assert_equal 1, lines.count { |l| /INFO.*LoggerServer started/ =~ l }
+        assert_equal 1, lines.count { |l| /INFO.*LoggerServer \(\d+\) started/ =~ l }
+        assert_equal 3, lines.count
+        assert_equal '', `./logger_server.rb start #{discarded_output}`
+        lines = IO.read(logger_log).lines
+        assert_equal 1, lines.count { |l| /INFO.*Daemons already started/ =~ l }
+        assert_equal 4, lines.count
+        assert_equal '', `./logger_server.rb status #{discarded_output}`
+        lines = IO.read(logger_log).lines
+        assert_equal 1, lines.count { |l| /INFO.*LoggerServer is running/ =~ l }
+        assert_equal 5, lines.count
+        assert_equal '', `./logger_server.rb stop #{discarded_output}`
+        lines = IO.read(logger_log).lines
+        assert_equal 0, lines.count { |l| /INFO.*LoggerServer \(\d+\) stopped/ =~ l }  # logger cannot write
+        lines = IO.read(logger_log).lines
+        assert_equal 1, lines.count { |l| /log writing failed. can't be called from trap context/ =~ l }
+        assert_equal 1, lines.count
+        assert_equal '', `./logger_server.rb stop #{discarded_output}`
+        lines = IO.read(logger_log).lines
+        assert_equal 1, lines.count { |l| /INFO.*No PID files found/ =~ l }
+        assert_equal 6, lines.count
+      ensure
+        `./logger_server.rb stop #{discarded_output}`
+        FileUtils.rm_f discarded_output
+        FileUtils.rm_f logger_log
       end
     end
   end
